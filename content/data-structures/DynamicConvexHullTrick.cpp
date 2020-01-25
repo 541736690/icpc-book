@@ -1,24 +1,22 @@
 /**
- * Author: Simon Lindholm
- * Date: 2017-04-20
- * License: CC0
- * Source: own work
- * Description: Container where you can add lines of the form kx+m, and query maximum values at points x.
- *  Useful for dynamic programming.
- * Time: O(\log N)
- * Status: tested
+ * Author: 
+ * Date: 
+ * License: 
+ * Source: 
+ * Description: 
  */
-#pragma once
+#include <bits/stdc++.h>
+using namespace std;
 
-bool Q;
+typedef long long ll;
+
 struct Line {
 	mutable ll k, m, p;
-	bool operator<(const Line& o) const {
-		return Q ? p < o.p : k < o.k;
-	}
+	bool operator<(const Line& o) const { return k < o.k; }
+	bool operator<(ll x) const { return p < x; }
 };
 
-struct LineContainer : multiset<Line> {
+struct LineContainer : multiset<Line, less<>> {
 	// (for doubles, use inf = 1/.0, div(a,b) = a/b)
 	const ll inf = LLONG_MAX;
 	ll div(ll a, ll b) { // floored division
@@ -38,7 +36,7 @@ struct LineContainer : multiset<Line> {
 	}
 	ll query(ll x) {
 		assert(!empty());
-		Q = 1; auto l = *lower_bound({0,0,x}); Q = 0;
+		auto l = *lower_bound(x);
 		return l.k * x + l.m;
 	}
 };

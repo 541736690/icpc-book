@@ -10,12 +10,12 @@ using namespace std;
 
 const int M = (int)5e5 + 500;
 
-struct Trie{  /// start-hash
+struct Trie{  
     static const int B = 26;
 
     int next[M][B], fail[M], end[M];
     int root, L;
-    int newnode(){
+    int newnode(){ /// start-hash
         for(int i = 0; i < B; i++) next[L][i] = -1;
         end[L++] = 0;
         return L - 1;
@@ -55,5 +55,5 @@ struct Trie{  /// start-hash
                 }
             }
         }
-    }
-} Aho;  /// end-hash
+    }  /// end-hash
+} Aho; 

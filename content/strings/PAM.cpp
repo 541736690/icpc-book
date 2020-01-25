@@ -17,7 +17,7 @@ struct PAM {
     int diff[N], anc[N];
     int ans[N], dp[N];
 
-    void clear() {
+    void clear() { /// start-hash
         s[0] = l[1] = -1;
         fail[0] = tot = now = 1;
         last = l[0] = 0;
@@ -52,9 +52,9 @@ struct PAM {
             anc[tt] = diff[tt] == diff[fail[tt]] ? anc[fail[tt]] : fail[tt];
         }
         last = nxt[cur][ch];
-    }
+    } /// end-hash
 
-    void trans(int i) {
+    void trans(int i) { /// start-hash
         for(int p = last; p > 1; p = anc[p]) {
             dp[p] = ans[i - l[anc[p]] - diff[p]];
             if(diff[p] == diff[fail[p]]) {
@@ -62,5 +62,5 @@ struct PAM {
             }
             (ans[i] += (i % 2 == 0) * dp[p]) %= mod;
         }
-    }
+    } /// end-hash
 } pam;

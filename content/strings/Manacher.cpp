@@ -5,17 +5,11 @@
  * Source: 
  * Description: 
  */
-#include <iostream>
-#include <cstdio>
-#include <algorithm>
-#include <cstring>
-
 struct Manacher {
     string s, sn;
     int p[2*N];
  
-    int Init()
-    {
+    int Init() {
         int len = s.length();
         sn = "$#";
         int j = 2;
@@ -31,8 +25,7 @@ struct Manacher {
         return sn.length();
     }
  
-    int run()
-    {
+    int run() {
         int len = Init();
         int max_len = -1;
  
@@ -41,20 +34,13 @@ struct Manacher {
  
         for (int i = 1; i < len; i++)
         {
-            if (i < mx)
-                p[i] = min(p[2 * id - i], mx - i);
-            else
-                p[i] = 1;
+            if (i < mx) p[i] = min(p[2 * id - i], mx - i);
+            else p[i] = 1;
  
-            while (sn[i - p[i]] == sn[i + p[i]])
-                p[i]++;
+            while (sn[i - p[i]] == sn[i + p[i]]) p[i]++;
  
-            if (mx < i + p[i])
-            {
-                id = i;
-                mx = i + p[i];
-            }
- 
+            if (mx < i + p[i]) id = i, mx = i + p[i];
+
             max_len = max(max_len, p[i] - 1);
         }
         return max_len;

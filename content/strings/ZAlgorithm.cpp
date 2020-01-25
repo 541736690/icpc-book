@@ -3,7 +3,7 @@
  * Date: 
  * License: 
  * Source: 
- * Description: 
+ * Description: str = "aabaacd", z = (x, 1, 0, 2, 1, 0, 0)
  */
 #include <bits/stdc++.h>
 using namespace std;
@@ -13,14 +13,7 @@ const int MAXN = (int)1e6 + 500;
 string s;
 int z[MAXN],cnt[MAXN];
 
-// Examples:
-// str = "aabaacd"
-// z[] = {x, 1, 0, 2, 1, 0, 0}
-
-// str = "abababab"
-// z[] = {x, 0, 6, 0, 4, 0, 2, 0}
-
-void getZarr(string str)
+void getZarr(string str) /// start-hash
 {
     memset(z, 0, sizeof(z));
     int n = str.length();
@@ -32,4 +25,4 @@ void getZarr(string str)
         if(i + z[i] - 1 > r)
             l = i,  r = i + z[i] - 1;
     }
-}
+} /// end-hash
