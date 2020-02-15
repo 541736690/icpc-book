@@ -3,34 +3,31 @@
  * Date: 2016-01-14
  * License: CC0
  * Status: Tested at CodeForces
- * Description: Given a rooted tree and a subset S of nodes, compute the minimal
- * subtree that contains all the nodes by adding all (at most $|S|-1$)
- * pairwise LCA's and compressing edges.
- * Returns a list of (par, orig\_index) representing a tree rooted at 0.
- * The root points to itself.
+ * Description:
  * Time: $O(|S| \log |S|)$
  */
 #pragma once
 
-#include "LCA.h"
-
-vpi compressTree(LCA& lca, const vi& subset) {
-	static vi rev; rev.resize(sz(lca.dist));
-	vi li = subset, &T = lca.time;
-	auto cmp = [&](int a, int b) { return T[a] < T[b]; };
-	sort(all(li), cmp);
-	int m = sz(li)-1;
-	rep(i,0,m) {
-		int a = li[i], b = li[i+1];
-		li.push_back(lca.query(a, b));
-	}
-	sort(all(li), cmp);
-	li.erase(unique(all(li)), li.end());
-	rep(i,0,sz(li)) rev[li[i]] = i;
-	vpi ret = {pii(0, li[0])};
-	rep(i,0,sz(li)-1) {
-		int a = li[i], b = li[i+1];
-		ret.emplace_back(rev[lca.query(a, b)], b);
-	}
-	return ret;
+void build(vector<int> vec) {
+    for(auto u : vir) // reset edge
+    sort(vec.begin(),vec.end(),[](int u,int v) {return st[u]<st[v];});
+    int sz = 0; vector<int> stk(n+1);
+    stk[++sz] = 1;
+    for(auto u : vec) {
+        int x = lca(u, stk[sz]);
+        vir.push_back(u); vir.push_back(x);
+        if(u == stk[sz]) continue;
+        if(x != stk[sz]) {
+            while(sz >= 2 && h[stk[sz-1]] >= h[x]) {
+                add_edge(stk[sz-1], stk[sz]);
+                sz--;
+            }
+            if(x != stk[sz]) {
+                add_edge(x, stk[sz]);
+                stk[sz] = x;
+            }
+        }
+        stk[++sz] = u;
+    }
+    for(int i=1;i<=sz-1;i++) add_edge(stk[i], stk[i+1]);
 }

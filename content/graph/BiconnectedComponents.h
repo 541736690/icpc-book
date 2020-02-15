@@ -3,52 +3,47 @@
  * Date: 2017-04-17
  * License: CC0
  * Source: folklore
- * Description: Finds all biconnected components in an undirected graph, and
- *  runs a callback for the edges in each. In a biconnected component there
- *  are at least two distinct paths between any two nodes. Note that a node can
- *  be in several components. An edge which is not in a component is a bridge,
- *  i.e., not part of any cycle.
+ * Description:
  * Time: O(E + V)
- * Status: tested during MIPT ICPC Workshop 2017
+ * Status: 
  * Usage:
- *  int eid = 0; ed.resize(N);
- *  for each edge (a,b) {
- *    ed[a].emplace_back(b, eid);
- *    ed[b].emplace_back(a, eid++); }
- *  bicomps([\&](const vi\& edgelist) {...});
  */
 #pragma once
 
-vi num, st;
-vector<vector<pii>> ed;
-int Time;
-template<class F>
-int dfs(int at, int par, F f) {
-	int me = num[at] = ++Time, e, y, top = me;
-	trav(pa, ed[at]) if (pa.second != par) {
-		tie(y, e) = pa;
-		if (num[y]) {
-			top = min(top, num[y]);
-			if (num[y] < me)
-				st.push_back(e);
-		} else {
-			int si = sz(st);
-			int up = dfs(y, e, f);
-			top = min(top, up);
-			if (up == me) {
-				st.push_back(e);
-				f(vi(st.begin() + si, st.end()));
-				st.resize(si);
-			}
-			else if (up < me) st.push_back(e);
-			else { /* e is a bridge */ }
-		}
-	}
-	return top;
-}
-
-template<class F>
-void bicomps(F f) {
-	num.assign(sz(ed), 0);
-	rep(i,0,sz(ed)) if (!num[i]) dfs(i, -1, f);
+int cur, num[maxn], low[maxn];
+int sz;
+vector<int> com[maxn];
+void tarjan(int u, int last) {
+    num[u] = low[u] = ++cur;
+    st.push(u); // vertex
+    for(auto tmp : way[u]) {
+        int v = tmp.first, id = tmp.second;
+        if(v == last) continue; // if(id == last)
+        if(!num[v]) {
+            // st.push(id);
+            tarjan(v, u); // tarjan(v, id)
+            low[u] = min(low[u], low[v]);
+            /* if(low[v] >= num[u]) {
+                sz++;
+                while(1) {
+                    int x = st.top(); st.pop();
+                    com[sz].push_back(x);
+                    if(x == id) break;
+                }
+            } */
+        }
+        else low[u] = min(low[u], num[v]);
+        /* else if(num[v] < num[u]) {
+            st.push(id);
+            low[u] = min(low[u], num[v]);
+        } */
+    }
+    if(num[u] == low[u]) { // vertex
+        sz++;  
+        while(1) {
+            int x = st.top(); st.pop();
+            com[sz].push_back(x);
+            if(x == u) break;
+        }
+    }
 }

@@ -3,110 +3,92 @@
  * Description: Dominator Tree.
  */
 
-#define N 110000 //max number of vertices
-
-vector<int> succ[N], prod[N], bucket[N], dom_t[N];
-int semi[N], anc[N], idom[N], best[N], fa[N], tmp_idom[N];
-int dfn[N], redfn[N];
-int child[N], size[N];
-int timestamp;
-
-void dfs(int now) { /// start-hash
-  dfn[now] = ++timestamp;
-  redfn[timestamp] = now;
-  anc[timestamp] = idom[timestamp] = child[timestamp] = size[timestamp] = 0;
-  semi[timestamp] = best[timestamp] = timestamp;
-  int sz = succ[now].size();
-  for(int i = 0; i < sz; ++i) {
-    if(dfn[succ[now][i]] == -1) {
-      dfs(succ[now][i]);
-      fa[dfn[succ[now][i]]] = dfn[now];
+struct Dominator{
+    struct min_DSU{
+        vector<int> par, val;
+        vector<int> const&semi;
+        min_DSU(int N, vector<int> const&semi):par(N, -1),val(N), semi(semi){
+            iota(val.begin(), val.end(), 0);
+        }
+        void comp(int x){
+            if(par[par[x]]!=-1){
+                comp(par[x]);
+                if(semi[val[par[x]]]<semi[val[x]])
+                    val[x] = val[par[x]];
+                par[x]=par[par[x]];
+            }
+        }
+        int f(int x){
+            if(par[x]==-1) return x;
+            comp(x);
+            return val[x];
+        }
+        void link(int x, int p){
+            par[x] = p;
+        }
+    };
+    int N;
+    vector<vector<int>> G, rG;
+    vector<int> idom, order;
+    Dominator(int _N):N(_N), G(N), rG(N){}
+    void add_edge(int a, int b){
+        G[a].emplace_back(b);
+        rG[b].emplace_back(a);
     }
-    prod[dfn[succ[now][i]]].push_back(dfn[now]);
-  }
-} /// end-hash
-
-void compress(int now) { /// start-hash
-  if(anc[anc[now]] != 0) {
-    compress(anc[now]);
-    if(semi[best[now]] > semi[best[anc[now]]])
-      best[now] = best[anc[now]];
-    anc[now] = anc[anc[now]];
-  }
-} /// end-hash
-
-inline int eval(int now) { /// start-hash
-  if(anc[now] == 0)
-    return now;
-  else {
-    compress(now);
-    return semi[best[anc[now]]] >= semi[best[now]] ? best[now]
-      : best[anc[now]];
-  }
-} /// end-hash
-
-inline void link(int v, int w) { /// start-hash
-  int s = w;
-  while(semi[best[w]] < semi[best[child[w]]]) {
-    if(size[s] + size[child[child[s]]] >= 2*size[child[s]]) {
-      anc[child[s]] = s;
-      child[s] = child[child[s]];
-    } else {
-      size[child[s]] = size[s];
-      s = anc[s] = child[s];
+    vector<int> calc_dominators(int S){
+        idom.assign(N, -1);
+        vector<int> par(N, -1), semi(N, -1);
+        vector<vector<int> > bu(N);
+        stack<int> s;
+        s.emplace(S);
+        while(!s.empty()){
+            int a=s.top();s.pop();
+            if(semi[a]==-1){
+                semi[a] = order.size();
+                order.emplace_back(a);
+                for(int i=0;i<(int)G[a].size();++i){
+                    if(semi[G[a][i]]==-1){
+                        par[G[a][i]]=a;
+                        s.push(G[a][i]);
+                    }
+                }
+            }
+        }
+        min_DSU uni(N, semi);
+        for(int i=(int)order.size()-1;i>0;--i){
+            int w=order[i];
+            for(int f:rG[w]){
+                int oval = semi[uni.f(f)];
+                if(oval>=0 && semi[w]>oval) semi[w] = oval;
+            }
+            bu[order[semi[w]]].push_back(w);
+            uni.link(w, par[w]);
+            while(!bu[par[w]].empty()){
+                int v = bu[par[w]].back(); bu[par[w]].pop_back();
+                int u=uni.f(v);
+                idom[v] = semi[u] < semi[v] ? u : par[w];
+            }
+        }
+        for(int i=1;i<(int)order.size();++i){
+            int w=order[i];
+            if(idom[w] != order[semi[w]])
+                idom[w] = idom[idom[w]];
+        }
+        idom[S]=-1;
+        return idom;
     }
-  }
-  best[s] = best[w];
-  size[v] += size[w];
-  if(size[v] < 2*size[w])
-    swap(s, child[v]);
-  while(s != 0) {
-    anc[s] = v;
-    s = child[s];
-  }
-} /// end-hash
-
-// idom[n] and other vertices that cannot be reached from n will be 0
-void lengauer_tarjan(int n) { // n is the root's number /// start-hash
-  memset(dfn, -1, sizeof dfn);
-  memset(fa, -1, sizeof fa);
-  timestamp = 0;
-  dfs(n);
-  fa[1] = 0;
-  for(int w = timestamp; w > 1; --w) {
-    int sz = prod[w].size();
-    for(int i = 0; i < sz; ++i) {
-      int u = eval(prod[w][i]);
-      if(semi[w] > semi[u])
-        semi[w] = semi[u];
+};
+ 
+int main() {
+    Dominator dom(3);
+    add_edge(0,1); // 0 index
+    add_edge(1,2);
+    add_edge(0,2);
+    vector<int> par = dom.calc_dominators(0); // input root
+    // par[i] is dominator of i
+    for(int i=0;i<n;i++) sz[i] = 1;
+    for(int i=(int)dom.order.size()-1;i>=0;i--) { // iterate with order
+        int u = dom.order[i];
+        sz[par[u]] += sz[u];
     }
-    bucket[semi[w]].push_back(w);
-    //anc[w] = fa[w]; link operation for o(mlogm) version
-                link(fa[w], w);
-    if(fa[w] == 0)
-      continue;
-    sz = bucket[fa[w]].size();
-    for(int i = 0; i < sz; ++i) {
-      int u = eval(bucket[fa[w]][i]);
-      if(semi[u] < fa[w])
-        idom[bucket[fa[w]][i]] = u;
-      else
-        idom[bucket[fa[w]][i]] = fa[w];
-    }
-    bucket[fa[w]].clear();
-  }
-  for(int w = 2; w <= timestamp; ++w) {
-    if(idom[w] != semi[w])
-      idom[w] = idom[idom[w]];
-  }
-  idom[1] = 0;
-  for(int i = timestamp; i > 1; --i) {
-    if(fa[i] == -1)
-      continue;
-    dom_t[idom[i]].push_back(i);
-  }
-  memset(tmp_idom, 0, sizeof tmp_idom);
-  for (int i = 1; i <= timestamp; i++)
-    tmp_idom[redfn[i]] = redfn[idom[i]];
-  memcpy(idom, tmp_idom, sizeof idom);
-} /// end-hash
+}
